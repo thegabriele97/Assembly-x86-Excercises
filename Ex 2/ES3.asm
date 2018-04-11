@@ -30,11 +30,12 @@ READ:   MOV AH, INT_READ
                             ;;AND MULTIPLY IT BY 10DEC 
         
         MUL CX
-        JO ERR_N            ;CHECKING IF THERE IS OVERFLOW
+        JO ERR_N            ;CHECKING IF THERE IS OF
         
         POP BX              ;RESTORING READ VALUE IN BX
         MOV BH, 0           ;RESETTING HIGH BYTE BCS USELESS
         ADD BX, AX          ;BX += AX (NEW VALUE = CURRENT)
+        JC ERR_N            ;CHECKING IF THERE IS OF
         
         JMP READ            ;GOING TO READ NEXT DIGIT
 
