@@ -17,9 +17,10 @@ REAL_SZ EQU $-TAB
         .startup
         
         MOV BX, 0
+        MOV AX, 0
 
         ;RESETTING RES_ROW TO 0
-        MOV CX, COL
+        MOV CX, COL+1
         MOV DI, 0
         
 RESET:  MOV RES_ROW[DI], 0
@@ -27,8 +28,10 @@ RESET:  MOV RES_ROW[DI], 0
         LOOP RESET     
                 
         ;COMPUTING SUM
-FOR_I:  MOV AX, 0
-        MOV SI, 0           
+FOR_I:  ADD AX, RES_ROW+COL*2    ;LAST COL AT LAST ROW
+        MOV RES_ROW+COL*2, AX    ;IS USED TO STORE TOTAL SUM           
+        MOV SI, 0
+        MOV AX, 0           
         
 FOR_J:  ADD AX, TAB[BX][SI]      ;ACCUMULATOR FOR CURR ROW
         
@@ -40,14 +43,25 @@ FOR_J:  ADD AX, TAB[BX][SI]      ;ACCUMULATOR FOR CURR ROW
         CMP SI, 2*COL 
         JNE FOR_J                ;LET'S GO TO NEXT COL
         
-        ;COPY SUM OF CURRENT
-        ;ROW IN TAB[BX][SI]
+        
         MOV TAB[BX][SI], AX      ;MOV ACCUMULATOR AT END OF 
                                  ;CURRENT ROW
         ADD BX, SI               
         ADD BX, 2
         CMP BX, REAL_SZ-((COL+1)*2) ;DON'T LOOK AT THIS     
         JNE FOR_I                ;MOVING TO NEXT ROW
-       
+        
+        ;ADDING LAST ROW TO TOTAL SUM
+        ;AT END OF THE MATRIX
+        MOV CX, COL
+        MOV SI, 0
+        MOV AX, RES_ROW+COL*2
+
+SUM:    ADD AX, RES_ROW[SI]
+        ADD SI, 2
+        LOOP SUM
+        
+        MOV RES_ROW[SI], AX
+        
         .exit
         END
