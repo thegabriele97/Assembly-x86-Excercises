@@ -25,8 +25,8 @@ RESET:  MOV [DI], 0           ;SET 0 TO LAST ROW
         MOV CX, ROW+1         ;COUNTER FOR ON_ROW LOOP
         MOV BX, 0             ;CURRENT ROW
         
-ON_ROW: PUSH BX               ;PUSHING PARAMS
-        PUSH OFFSET RES_ROW   ;PROC CALLS
+ON_ROW: PUSH BX               ;PUSHING PARAMS FOR
+        PUSH OFFSET RES_ROW   ;PROCEDURE CALL
         PUSH COL
         CALL SUM_ROW          ;COMPUTE SUM OF CURR ROW
                              
