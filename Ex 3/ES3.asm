@@ -22,7 +22,7 @@ RESET:  MOV [DI], 0           ;SET 0 TO LAST ROW
         ADD DI, 2
         LOOP RESET        
         
-        MOV CX, ROW+1         ;COUNTER FOR ON_ROW LOOP
+        MOV CX, ROW           ;COUNTER FOR ON_ROW LOOP
         MOV BX, 0             ;CURRENT ROW
         
 ON_ROW: PUSH BX               ;PUSHING PARAMS FOR
@@ -32,6 +32,8 @@ ON_ROW: PUSH BX               ;PUSHING PARAMS FOR
                              
         ADD BX, COL*2+2       ;STEP FORWARD TO NEXT ROW 
         LOOP ON_ROW           ;CONTINUE TO ON_ROW
+         
+        SHL RES_ROW[COL*2], 1 ;MULTIPLY ROW_#3->[F] BY 2
         
         JMP KILL              ;KILL PROGRAM
         
@@ -70,7 +72,7 @@ SUM:    MOV BX, [SI]
         POP SI
         POP DI
         POP CX
-        ADD SP, 2           ;RESTORING STACK
+        POP BP              ;RESTORING STACK
         
         RET 6       
                             
