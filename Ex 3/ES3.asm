@@ -9,59 +9,75 @@ ROW     EQU 3
 TAB     DW 154, 123,  109, 86,   4, ?; 0
         DW 412, -23, -231,  9,  50, ?; 1
         DW 123, -24,   12, 55, -45, ?; 2
-RES_ROW DW   ?,   ?,    ?,  ?,   ?, ?; 3
+RES_ROW DW   ?,   ?,    ?,  ?,   ?, ?; 3        
 
-REAL_SZ EQU $-TAB              
-        
+TAB_SZ  EQU $-TAB        
         .code
         .startup
         
-        MOV BX, 0
-        MOV AX, 0
-
-        ;RESETTING RES_ROW TO 0
-        MOV CX, COL+1
-        MOV DI, 0
-        
-RESET:  MOV RES_ROW[DI], 0
-        ADD DI, 2
-        LOOP RESET     
-                
-        ;COMPUTING SUM
-FOR_I:  ADD AX, RES_ROW+COL*2    ;LAST COL AT LAST ROW
-        MOV RES_ROW+COL*2, AX    ;IS USED TO STORE TOTAL SUM           
-        MOV SI, 0
-        MOV AX, 0           
-        
-FOR_J:  ADD AX, TAB[BX][SI]      ;ACCUMULATOR FOR CURR ROW
-        
-        MOV CX, RES_ROW[SI]      ;USING CX FOR COMPUTE
-        ADD CX, TAB[BX][SI]      ;THE SUM FOR EACH COL
-        MOV RES_ROW[SI], CX        
-        
-        ADD SI, 2                
-        CMP SI, 2*COL 
-        JNE FOR_J                ;LET'S GO TO NEXT COL
-        
-        
-        MOV TAB[BX][SI], AX      ;MOV ACCUMULATOR AT END OF 
-                                 ;CURRENT ROW
-        ADD BX, SI               
-        ADD BX, 2
-        CMP BX, REAL_SZ-((COL+1)*2) ;DON'T LOOK AT THIS     
-        JNE FOR_I                ;MOVING TO NEXT ROW
-        
-        ;ADDING LAST ROW TO TOTAL SUM
-        ;AT END OF THE MATRIX
         MOV CX, COL
-        MOV SI, 0
-        MOV AX, RES_ROW+COL*2
-
-SUM:    ADD AX, RES_ROW[SI]
+        MOV DI, OFFSET RES_ROW
+        
+RESET:  MOV [DI], 0           ;SET 0 TO LAST ROW  
+        ADD DI, 2
+        LOOP RESET        
+        
+        MOV CX, ROW+1         ;COUNTER FOR ON_ROW LOOP
+        MOV BX, 0             ;CURRENT ROW
+        
+ON_ROW: PUSH BX               ;PUSHING PARAMS
+        PUSH OFFSET RES_ROW   ;PROC CALLS
+        PUSH COL
+        CALL SUM_ROW          ;COMPUTE SUM OF CURR ROW
+                             
+        ADD BX, COL*2+2       ;STEP FORWARD TO NEXT ROW 
+        LOOP ON_ROW           ;CONTINUE TO ON_ROW
+        
+        JMP KILL              ;KILL PROGRAM
+        
+;-------PROCEDURES-----------------------------
+SUM_ROW PROC
+        
+        ;PRELIMINARY PROC SETUP
+        PUSH BP             ;------------------
+        MOV BP, SP          ;PARAMS DEFINITION;
+        PUSH CX             ;LEN     :>[SP+4];;
+        PUSH DI             ;ADDRESS :>[SP+8];;
+        PUSH SI             ;LAST_ROW:>[SP+6];;
+        PUSH BX             ;.-.-.-.-.-.-.-.-.-
+        PUSH AX             ;------------------
+                            
+        ;PROCEDURE BODY       
+        MOV CX, 4[BP]
+        MOV SI, 8[BP]
+        MOV DI, 6[BP]
+        MOV AX, 0
+        
+SUM:    MOV BX, [SI]
+        ADD AX, BX
+        ADD [DI], BX
+        
+        ADD DI, 2
         ADD SI, 2
         LOOP SUM
         
-        MOV RES_ROW[SI], AX
+        MOV [SI], AX        ;MOV SUM IN CURRENT_ROW->[F]
+        ADD [DI], AX        ;ADD SUM IN ROW_#3->[F]
         
+        ;END OF PROC
+        POP AX              ;RESTORING REGS
+        POP BX              
+        POP SI
+        POP DI
+        POP CX
+        ADD SP, 2           ;RESTORING STACK
+        
+        RET 6       
+                            
+SUM_ROW ENDP
+;-------END OF PROCEDURES----------------------
+
+KILL:   ;KILL PROGRAM
+             
         .exit
         END
