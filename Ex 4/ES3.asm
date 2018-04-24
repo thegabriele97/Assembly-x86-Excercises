@@ -1,15 +1,17 @@
 INT_W   EQU 2H
 
-DIM     EQU 4        
+DIM     EQU 5        
         
         .model small
         .stack
         .data
         
-MAT     DW  6, 1,  1, 3
-        DW  1, 7,  2, 4
-        DW  1, 2, 19, 5       
-        DW  3, 4,  5, 2 
+MAT     DW  6, 1,  1, 3, 2
+        DW  1, 7,  2, 4, 3
+        DW  1, 2, 19, 5, 4       
+        DW  3, 4,  5, 2, 5
+        DW  2, 3,  4, 5, 6
+         
         .code
         .startup
         
