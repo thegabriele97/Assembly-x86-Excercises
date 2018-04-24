@@ -3,15 +3,20 @@ DIM     EQU 8
         .model small
         .stack
         .data
-         
+     
 MATRIX  DB 0,  4,  0, 0,  0,  0,  0, 60
-        DB 0,  5,  0, 0, 11,  0,  0, 0
-        DB 0,  5,  7, 0,  0, 10,  0, 0          
-        DB 0,  0,  0, 9,  0,  0, 49, 0
-        DB 0,  0, 10, 0,  0,  0,  0, 0
-        DB 0, 10,  3, 9,  0,  0, 12, 0
-        DB 0,  0, 58, 0,  0, 17,  0, 0
-        DB 0,  1,  0, 0,  3,  0,  0, 0
+        DB 0,  5,  0, 0, 11,  0,  0,  0
+        DB 0,  5,  7, 0,  0, 10,  0,  0          
+        DB 0,  0,  0, 9,  0,  0, 49,  0
+        DB 0,  0, 10, 0,  0,  0,  0,  0
+        DB 0, 10,  3, 9,  0,  0, 12,  0
+        DB 0,  0, 58, 0,  0, 17,  0,  0
+        DB 0,  1,  0, 0,  3,  0,  0,  0
+
+MSG_END DB 'X=', ?
+ONE_P   EQU $-MSG_END-1
+        DB ' Y=', ?, 024H
+TWO_P   EQU $-MSG_END-2
         
         .code
         .startup
@@ -52,7 +57,16 @@ CONT:   DEC CL
         JNZ COUNT_J
         
         DEC CH
-        JNZ COUNT_I        
+        JNZ COUNT_I
+        
+        ;PRINTING FINAL RESULT
+        OR DX, 3030H
+        
+        MOV AH, 9H
+        MOV MSG_END[ONE_P], DL
+        MOV MSG_END[TWO_P], DH
+        MOV DX, OFFSET MSG_END
+        INT 21H
         
         JMP KILL
         
@@ -69,82 +83,74 @@ SUM_MAX_ITEM PROC
         MOV BX, 0          ;END_OF_MATRIX   :> [SP+14]
                            ;
                            ;RET {TOTAL_SUM} :> DX
-        ;NORD              ;----------------------------
-NORD:   PUSH 12[BP]
+        ;NORTH             ;----------------------------
+NORTH:  PUSH 12[BP]
         PUSH 10[BP]
         PUSH 8[BP]
         PUSH 6[BP]
-        PUSH 4[BP]
-        CALL CALC_ADDRESS
+        PUSH 4[BP]         
+        CALL CALC_ADDRESS  ;COMPUTING ADDRESS
         
-        XCHG BX, AX
-        SUB BX, CX
+        XCHG BX, AX        ;AX=0(OLD BX=0); BX=ACTUAL ADDRESS
+        SUB BX, CX         ;ADDRESSING TO PREV ITEM ON COL
         
-        JC SOUTH
-        CMP BX, 4[BP]
-        JB SOUTH
+        JC SOUTH           ;CHECKING FOR OVERFLOW
+        CMP BX, 4[BP]      ;CHECKING LOWER BOUND OF THE MATRIX
+        JB SOUTH           ;IF IS OUT OF BOUNDS, GOTO SOUTH
         
-        ADD AL, [BX]
-        ADC AH, 0
+        ADD AL, [BX]       ;ADDING TO TOTAL SUM
+        ADC AH, 0          ;ADD CARRY IF NEEDED TO HIGH BYTE
         
         ;SOUTH    
-SOUTH:  ADD BX, CX
-        ADD BX, CX
-        JC EAST  
-        CMP BX, 14[BP]
-        JA EAST
+SOUTH:  ADD BX, CX         ;RESTORE ACTUAL ADDRESS
+        ADD BX, CX         ;ADDRESSING TO NEXT ITEM ON COL
+        JC EAST            ;CHECKING FOR OVERFLOW
+        CMP BX, 14[BP]     ;CHECKING UPPER BOUND OF THE MATRIX
+        JA EAST            ;IF IS OUT OF BOUNDS, GOTO EAST
                 
-        ADD AL, [BX]
+        ADD AL, [BX]       ;USUAL ADDING
         ADC AH, 0
         
         ;EAST
-EAST:   SUB BX, CX
+EAST:   SUB BX, CX         ;RESTORE ACTUAL ADDRESS
         
-        DEC BX
-        JC WEST
+        DEC BX             ;ADDRESSING TO THE LEFT ITEM
+        JC WEST            ;CHECKING FOR OVERFLOW
         
-        MOV CX, AX
+        MOV CX, AX         ;SAVING ACTUAL SUM(AX) IN CX
         PUSH 0
         PUSH 10[BP]
         PUSH 8[BP]
         PUSH 6[BP]
-        PUSH 4[BP]
-        CALL CALC_ADDRESS
+        PUSH 4[BP]         ;COMPUTING ADDRESS OF FIRST
+        CALL CALC_ADDRESS  ;ITEM OF CURRENT ROW 
         
-        CMP BX, AX
-        MOV AX, CX
-        JB WEST
+        CMP BX, AX         ;CHECKING FOR BOUNDS ON CURR ROW
+        XCHG AX, CX        ;RESTORING ACTUAL SUM FROM CX AND SAVING AX FOR LATER
+        JB WEST            ;IF IS OUT OF BOUNDS, GOTO WEST
         
-        ADD AL, [BX]
+        ADD AL, [BX]       ;USUAL ADDING
         ADC AH, 0
         
         ;WEST
-WEST:   INC BX
+WEST:   INC BX             ;RESTORING ACTUAL ADDRESS
         
-        ADD BX, 1        
-        JC END_P
+        ADD BX, 1          ;ADDRESSING TO THE RIGHT ITEM
+        JC END_P           ;CHECKING FOR OVERFLOW
         
-        MOV CX, AX
-        MOV AX, 8[BP]
-        DEC AX
-        PUSH AX
-        PUSH 10[BP]
-        PUSH 8[BP]
-        PUSH 6[BP]
-        PUSH 4[BP]
-        CALL CALC_ADDRESS
-        
-        CMP BX, AX
+        XCHG CX, AX        ;SAVING ACTUAL SUM; RESTORING ADDRESS OF FIRST ITEM OF THIS ROW
+        ADD AX, 8[BP]      ;COMPUTING ADDRESS OF FIRST ITEM OF NEXT ROW
+        CMP BX, AX         ;CHECKING FOR BOUNDS
         MOV AX, CX
-        JA END_P
-        
-        ADD AL, [BX]
+        JAE END_P          ;IF IS OUT OF BOUNDS, GOTO END_P
+                           
+        ADD AL, [BX]       ;USUAL ADDING
         ADC AH, 0 
 
-END_P:  POP BX
+END_P:  POP BX             ;RESTORING REGS
         POP CX
         POP BP
-        RET 0CH                                 
+        RET 0CH            ;RESTORING STACK                     
                            
 SUM_MAX_ITEM ENDP
 
