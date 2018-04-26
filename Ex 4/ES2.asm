@@ -11,27 +11,40 @@ LEN     EQU $-COINS
         .code
         .startup
         
-        MOV BX, 0
-        MOV SI, 0
-        MOV DI, 0
+        MOV DI, OFFSET VALUES
+        MOV SI, OFFSET COINS
+        MOV CX, LEN
+        XOR BX, BX            ;CLEAR BX
         
-LOOP_:  MOV AX, VALUES[SI]  ;COMPUTING TOTAL SUM
-        MUL COINS[DI]       ;SUM += COINS[I]*VALUES[I]
-        ADD BX, AX
-                
-        ADD SI, 2
-        INC DI
         
-        CMP DI, LEN
-        JNE LOOP_           ;CONTINUE WITH LOOP_
+COUNT:  PUSH BX               ;SAVING TOTAL SUM
+        XOR BH, BH            ;CLEARING BH
         
-        MOV DX, 0
-        MOV AX, BX          ;DIV RESULT BY 100DEC
-        MOV BX, 064H        
-        DIV BX
+        MOV AX, [DI]          ;AX = CURRENT VALUE
+        MOV BL, [SI]          ;BL = CURRENT COIN
         
-        MOV EUR, AX         ;SAVING RESULT
+        MUL BX                ;AX = AX*BX
+        JO OF_ERR             ;CHECK FOR OVERFLOW
+        
+        POP BX                ;RESTORING OLD TOT SUM
+        ADD BX, AX            ;ADDING NEW VALUE
+        
+        ADD DI, 2
+        INC SI
+        LOOP COUNT            ;GOING FORWARD
+        
+        MOV AX, BX            ;AX = FINAL SUM
+        MOV BX, 0x64          ;BX = 100
+        DIV BX                ;AX = AX / 100; DX = AX % 100
+        
+        MOV EUR, AX
         MOV CENTS, DX
         
+        JMP KILL              ;DONE
+
+OF_ERR: INT 0H
+        JMP KILL
+        
+KILL:           
         .exit
         END
