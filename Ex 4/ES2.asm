@@ -33,6 +33,7 @@ COUNT:  PUSH BX               ;SAVING TOTAL SUM
         INC SI
         LOOP COUNT            ;GOING FORWARD
         
+        XOR DX, DX            ;CLEARING DX
         MOV AX, BX            ;AX = FINAL SUM
         MOV BX, 0x64          ;BX = 100
         DIV BX                ;AX = AX / 100; DX = AX % 100
