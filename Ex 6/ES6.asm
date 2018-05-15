@@ -14,7 +14,7 @@ MAT     DW  2,  1, -3
         
 DET:    PUSH OFFSET MAT[6]
         PUSH CX
-        SUB SP, 2
+        SUB SP, 2             ;USED TO STORE RESULT
         
         CALL DET_2        
         
@@ -23,10 +23,10 @@ DET:    PUSH OFFSET MAT[6]
         SHL SI, 1
         IMUL MAT[SI]
         
-        CMP CX, 0x1
-        JNE NOT_MIN
-        
-        PUSH BX
+        CMP CX, 0x1           ;IF WE ARE IN MID COL
+        JNE NOT_MIN           ;THERE IS NEED TO MULTIPLY
+                              ;2x2 DET BY -1 AS LAPLACE
+        PUSH BX               ;ASLGORYTHM SAYS
         MOV BX, 0xFFFF
         IMUL BX
         POP BX
@@ -55,12 +55,12 @@ DET_2 PROC
         XOR SI, SI
         XOR CX, CX
         
-FILL:   CMP SI, 6[BP]
-        JNE CONT
-        
-        ADD SI, 2
-        JMP FILL
-        
+FILL:   CMP SI, 6[BP]       ;THIS LOOP WILL PUSH
+        JNE CONT            ;ON THE STACK THE MATRIX ITEMS
+                            ;USED TO COMPUTE A 2X2 DET
+        ADD SI, 2           ;
+        JMP FILL            ;IS PROGRAMMED TO SKIP ELEMENTS
+                            ;ON SAME COL, USING LAPLACE ALGORYTHM
 CONT:   PUSH [BX][SI]
         ADD SI, 2
         
@@ -77,20 +77,20 @@ CONT2:  INC CX
         PUSH BP
         MOV BP, SP
         
-        MOV AX, 8[BP]
+        MOV AX, 8[BP]       ;COMPUTE A*D
         IMUL WORD PTR 2[BP]
         MOV BX, AX
         
-        MOV AX, 4[BP]
+        MOV AX, 4[BP]       ;COMPUTE B*C
         IMUL WORD PTR 6[BP]
         
         XCHG AX, BX
-        SUB AX, BX
+        SUB AX, BX          ;SUB
         
         POP BP
         MOV 4[BP], AX
         
-        ADD SP, 0x8
+        ADD SP, 0x8         ;RESTORING STACK
         POP SI
         POP CX
         POP BX
