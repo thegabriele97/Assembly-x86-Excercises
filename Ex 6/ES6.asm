@@ -33,6 +33,7 @@ DET:    PUSH OFFSET MAT[6]
         
 NOT_MIN:ADD BX, AX
         INC CX
+        ADD SP, 0x4
         
         CMP CX, 0x3
         JNE DET
