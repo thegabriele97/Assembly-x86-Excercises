@@ -41,7 +41,7 @@ CI:     MOV AX, [SI]
         MOV AX, [SI]
         DIV BX
         CMP DX, 0x0
-        JNZ NO_SEC
+        JNZ NEXT
         
         MOV [DI], 1
         JMP NEXT

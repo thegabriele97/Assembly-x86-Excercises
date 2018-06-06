@@ -7,7 +7,7 @@ RISULT  DD ?
         .code
         .startup
         
-        PUSH 4 ; base
+        PUSH 5 ; base
         PUSH 12 ; esponente
         SUB SP, 4
         CALL potenza
@@ -48,6 +48,7 @@ CI:     MOV BX, DX
         POP AX
         POP BX
         ADD DX, BX
+        JC OF
       
         LOOP CI
         JMP RETURN
